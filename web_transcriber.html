@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>web transcriber</title>
+</head>
+<body>
+    <h1>web transcriber</h1>
+    <button id="btn_start">start</button>
+    <button id="btn_stop">stop</button>
+    <div id="content"></div>
+    <a id="download" href="#" download="transcribe.txt" onclick="handleDownload()">download text file</a>
+
+    <script>
+        const speech = new webkitSpeechRecognition();
+        speech.lang = 'ja-JP';
+
+        const btn_start = document.getElementById('btn_start');
+        const btn_stop = document.getElementById('btn_stop');
+        const content = document.getElementById('content');
+
+        var is_active = false;
+
+        // start
+        btn_start.addEventListener('click' , function() {
+            if(is_active == false){
+                speech.start();
+                is_active = true;
+            }
+        });
+
+        // stop
+        btn_stop.addEventListener('click' , function() {
+            if(is_active == true){
+                speech.abort();
+                is_active = false;
+            }
+            
+        });
+
+        // write result into html
+        speech.onresult = function(e) {
+            speech.stop();
+            if(e.results[0].isFinal){
+                var autotext =  e.results[0][0].transcript;
+                content.innerHTML += '<div>' + getCurrentDateTime() + ' : ' + autotext + '</div>';
+            }
+        }
+
+        speech.onend = () => { 
+            if(is_active == true){
+                speech.start();
+            }
+        };
+        
+        // get current datetime
+        function getCurrentDateTime() {
+            let date = new Date();
+            let year = date.getFullYear();
+            let month = ("00" + (date.getMonth()+1)).slice(-2);
+            let day = ("00" + (date.getDate())).slice(-2);
+            let hour = ("00" + (date.getHours())).slice(-2);
+            let min = ("00" + (date.getMinutes())).slice(-2);
+            let sec = ("00" + (date.getSeconds())).slice(-2);
+
+            currentDateTime = year + '/' + month + '/' + day + ' ' + hour + ':' + min + ':' + sec;
+
+            return currentDateTime;
+        }
+
+        function handleDownload() {
+                var transcribe = content.innerText
+                var blob = new Blob([ transcribe ], { "type" : "text/plain" });
+
+                if (window.navigator.msSaveBlob) { 
+                    window.navigator.msSaveBlob(blob, "transcribe.txt"); 
+                    window.navigator.msSaveOrOpenBlob(blob, "transcribe.txt"); 
+                } else {
+                    document.getElementById("download").href = window.URL.createObjectURL(blob);
+                }
+            }
+    </script>
+</body>
+<html>
